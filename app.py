@@ -18,11 +18,13 @@ import tempfile
 # ==========================================
 # CONFIGURACIÓN DE PÁGINA
 # ==========================================
+# ==========================================
+# CONFIGURACIÓN DE PÁGINA
+# ==========================================
 st.set_page_config(
     page_title="CRM Pro - Ventas & Logística",
     page_icon="⚡",
     layout="wide"
-)
 )
 
 # Clave Maestro del Propietario (Tú tienes el control total)
