@@ -58,7 +58,7 @@ def conectar_sheets():
         try:
             hoja_logistica = planilla.worksheet("Logistica")
         except Exception:
-            hoja_logistica = planilla.add_worksheet(title="Logistica", rows="100", cols="20")
+            hoja_logistica = planilla.add_worksheet(title="Logistica", rows=100, cols=20)
             hoja_logistica.append_row(["ID Pedido", "Cliente", "Transporte", "Tracking", "Estado", "Link Remito Drive"])
             
         try:
