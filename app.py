@@ -91,38 +91,7 @@ def conectar_sheets():
         sheet_url = st.secrets.get("SHEET_URL", "https://docs.google.com/spreadsheets/d/1mAasQyEscIC194XW54WQF_VcyaIqJKFj/edit")
         planilla = client.open_by_url(sheet_url)
         
-def conectar_sheets():
-    try:
-        creds = obtener_credenciales_google()
-        client = gspread.authorize(creds)
-        
-        # Obtenemos la URL y la limpiamos de espacios ocultos o comillas dobles
-        sheet_url = st.secrets.get("SHEET_URL", "https://docs.google.com/spreadsheets/d/1mAasQyEscIC194XW54WQF_VcyaIqJKFj/edit")
-        sheet_url = str(sheet_url).strip().strip('"').strip("'")
-        
-        planilla = client.open_by_url(sheet_url)
-        hoja_leads = planilla.sheet1
-        
-        # Bloque Logística con los números corregidos (sin comillas)
-        try:
-            hoja_logistica = planilla.worksheet("Logistica")
-        except Exception:
-            hoja_logistica = planilla.add_worksheet(title="Logistica", rows=100, cols=20)
-            hoja_logistica.append_row(["ID Pedido", "Cliente", "Transporte", "Tracking", "Estado", "Link Remito Drive"])
-            
-        # Bloque Licencias con los números corregidos (sin comillas)
-        try:
-            hoja_licencias = planilla.worksheet("Licencias")
-        except Exception:
-            hoja_licencias = planilla.add_worksheet(title="Licencias", rows=100, cols=20)
-            hoja_licencias.append_row(["Clave", "Cliente", "Estado", "Fecha Creacion"])
-            hoja_licencias.append_row([MASTER_KEY, "PROPIETARIO MAESTRO", "Activo", str(datetime.now())])
-            
-        return planilla, hoja_leads, hoja_logistica, hoja_licencias, creds
-        
-    except Exception as e:
-        st.error(f"Error conectando a Google Sheets. Detalle técnico: {e}")
-        st.stop()
+
 
 def subir_a_drive_temp(file_buffer, nombre_archivo, id_carpeta, creds):
     try:
