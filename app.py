@@ -64,7 +64,7 @@ def conectar_sheets():
         try:
             hoja_licencias = planilla.worksheet("Licencias")
         except Exception:
-            hoja_licencias = planilla.add_worksheet(title="Licencias", rows="100", cols="20")
+            hoja_licencias = planilla.add_worksheet(title="Licencias", rows=100, cols=20)
             hoja_licencias.append_row(["Clave", "Cliente", "Estado", "Fecha Creacion"])
             hoja_licencias.append_row([MASTER_KEY, "PROPIETARIO MAESTRO", "Activo", str(datetime.now())])
             
