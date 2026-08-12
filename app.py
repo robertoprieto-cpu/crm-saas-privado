@@ -35,16 +35,32 @@ def obtener_credenciales_google():
 def conectar_sheets():
     # 1. Autorización de seguridad
     try:
-        "1uCTuFEK6MvR7b0U_hKjisUuGJbyDFgGDJoIObUuyFZE/edit?gid=0#gid=0"
+        creds = obtener_credenciales_google()
+        client = gspread.authorize(creds)
+    except Exception as e:
+        st.error(f"🚨 Error 1 - Fallo en credenciales: {e}")
+        st.stop()
         
-    # 2. Conexión directa mediante ID (Sin usar la URL entera)
+    # 2. Conexión directa mediante URL COMPLETA
     try:
-        # Extraemos solo tu código único de la URL
-        sheet_id = "1mAasQyEscIC194XW54WQF_VcyaIqJKFj"
-        planilla = client.open_by_key(sheet_id)
+        # BORRA EL TEXTO DE ABAJO Y PEGA TU URL COMPLETA ENTRE LAS COMILLAS:
+        sheet_url = "https://docs.google.com/spreadsheets/d/1uCTuFEK6MvR7b0U_hKjisUuGJbyDFgGDJoIObUuyFZE/edit?gid=0#gid=0"
+        
+        planilla = client.open_by_url(sheet_url)
     except Exception as e:
         st.error(f"🚨 Error 2 - Fallo al abrir la planilla en Google: {e}")
         st.stop()
+        
+    # 3. Lectura de las pestañas
+    try:
+        hoja_leads = planilla.sheet1
+        hoja_logistica = planilla.worksheet("Logistica")
+        hoja_licencias = planilla.worksheet("Licencias")
+    except Exception as e:
+        st.error(f"🚨 Error 3 - Fallo al leer las pestañas: {e}")
+        st.stop()
+        
+    return planilla, hoja_leads, hoja_logistica, hoja_licencias, creds
         
     # 3. Lectura de las pestañas
     try:
