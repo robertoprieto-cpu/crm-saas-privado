@@ -34,8 +34,11 @@ except Exception as e:
 def cargar_tabla(nombre_pestaña):
     worksheet = sh.worksheet(nombre_pestaña)
     data = worksheet.get_all_records()
-    return pd.DataFrame(data), worksheet
-
+    df = pd.DataFrame(data)
+    # Limpia espacios invisibles en los nombres de las columnas si los hubiera
+    if not df.empty:
+        df.columns = df.columns.str.strip()
+    return df, worksheet
 # ==========================================
 # 3. MENÚ LATERAL Y NAVEGACIÓN
 # ==========================================
