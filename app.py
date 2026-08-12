@@ -37,24 +37,14 @@ def conectar_sheets():
         creds = obtener_credenciales_google()
         client = gspread.authorize(creds)
         
-        sheet_url = st.secrets.get("SHEET_URL", "https://docs.google.com/spreadsheets/d/1mAasQyEscIC194XW54WQF_VcyaIqJKFj/edit")
-        sheet_url = str(sheet_url).strip().strip('"').strip("'")
-        
+        # Conexión directa a tu archivo
+        sheet_url = "https://docs.google.com/spreadsheets/d/1mAasQyEscIC194XW54WQF_VcyaIqJKFj/edit"
         planilla = client.open_by_url(sheet_url)
-        hoja_leads = planilla.sheet1
         
-        try:
-            hoja_logistica = planilla.worksheet("Logistica")
-        except Exception:
-            hoja_logistica = planilla.add_worksheet(title="Logistica", rows=100, cols=20)
-            hoja_logistica.append_row(["ID Pedido", "Cliente", "Transporte", "Tracking", "Estado", "Link Remito Drive"])
-            
-        try:
-            hoja_licencias = planilla.worksheet("Licencias")
-        except Exception:
-            hoja_licencias = planilla.add_worksheet(title="Licencias", rows=100, cols=20)
-            hoja_licencias.append_row(["Clave", "Cliente", "Estado", "Fecha Creacion"])
-            hoja_licencias.append_row([MASTER_KEY, "PROPIETARIO MAESTRO", "Activo", str(datetime.now())])
+        # Leemos las pestañas que ya creaste manualmente
+        hoja_leads = planilla.sheet1
+        hoja_logistica = planilla.worksheet("Logistica")
+        hoja_licencias = planilla.worksheet("Licencias")
             
         return planilla, hoja_leads, hoja_logistica, hoja_licencias, creds
         
