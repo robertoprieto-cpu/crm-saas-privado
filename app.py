@@ -41,36 +41,45 @@ def conectar_sheets():
         st.error(f"🚨 Error 1 - Fallo en credenciales: {e}")
         st.stop()
         
-    # 2. Conexión directa mediante URL COMPLETA
+    # 2. Conexión a la planilla
     try:
-        # BORRA EL TEXTO DE ABAJO Y PEGA TU URL COMPLETA ENTRE LAS COMILLAS:
-        sheet_url = "https://docs.google.com/spreadsheets/d/1uCTuFEK6MvR7b0U_hKjisUuGJbyDFgGDJoIObUuyFZE/edit?gid=0#gid=0"
-        
+        # Aquí mantén tu URL completa (la que pusiste en el paso anterior)
+        sheet_url = "PEGA_AQUI_TU_URL_COMPLETA_Y_LARGA"
         planilla = client.open_by_url(sheet_url)
     except Exception as e:
-        st.error(f"🚨 Error 2 - Fallo al abrir la planilla en Google: {e}")
+        st.error(f"🚨 Error 2 - Fallo al abrir la planilla: {e}")
         st.stop()
         
-    # 3. Lectura de las pestañas
+    # 3. Lectura / Creación de la hoja principal
     try:
         hoja_leads = planilla.sheet1
-        hoja_logistica = planilla.worksheet("Logistica")
-        hoja_licencias = planilla.worksheet("Licencias")
     except Exception as e:
-        st.error(f"🚨 Error 3 - Fallo al leer las pestañas: {e}")
+        st.error(f"🚨 Error 3 - Fallo al leer la hoja principal (Hoja 1): {e}")
+        st.stop()
+
+    # 4. Creación Segura de Logistica
+    try:
+        hoja_logistica = planilla.worksheet("Logistica")
+    except gspread.exceptions.WorksheetNotFound:
+        # Si no existe, la creamos (sin comillas en los números)
+        hoja_logistica = planilla.add_worksheet(title="Logistica", rows=100, cols=20)
+        hoja_logistica.append_row(["ID Pedido", "Cliente", "Transporte", "Tracking", "Estado", "Link Remito Drive"])
+    except Exception as e:
+        st.error(f"🚨 Error al procesar Logística: {e}")
+        st.stop()
+        
+    # 5. Creación Segura de Licencias
+    try:
+        hoja_licencias = planilla.worksheet("Licencias")
+    except gspread.exceptions.WorksheetNotFound:
+        hoja_licencias = planilla.add_worksheet(title="Licencias", rows=100, cols=20)
+        hoja_licencias.append_row(["Clave", "Cliente", "Estado", "Fecha Creacion"])
+        hoja_licencias.append_row([MASTER_KEY, "PROPIETARIO MAESTRO", "Activo", str(datetime.now())])
+    except Exception as e:
+        st.error(f"🚨 Error al procesar Licencias: {e}")
         st.stop()
         
     return planilla, hoja_leads, hoja_logistica, hoja_licencias, creds
-        
-    # 3. Lectura de las pestañas
-    try:
-        hoja_leads = planilla.sheet1
-        hoja_logistica = planilla.worksheet("Logistica")
-        hoja_licencias = planilla.worksheet("Licencias")
-    except Exception as e:
-        st.error(f"🚨 Error 3 - Fallo al leer las pestañas: {e}")
-        st.stop()
-        
     return planilla, hoja_leads, hoja_logistica, hoja_licencias, creds
 
 # ==========================================
