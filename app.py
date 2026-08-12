@@ -44,7 +44,7 @@ def conectar_sheets():
     # 2. Conexión a la planilla
     try:
         # Aquí mantén tu URL completa (la que pusiste en el paso anterior)
-        sheet_url = "PEGA_AQUI_TU_URL_COMPLETA_Y_LARGA"
+        sheet_url = "https://docs.google.com/spreadsheets/d/1uCTuFEK6MvR7b0U_hKjisUuGJbyDFgGDJoIObUuyFZE/edit?gid=0#gid=0"
         planilla = client.open_by_url(sheet_url)
     except Exception as e:
         st.error(f"🚨 Error 2 - Fallo al abrir la planilla: {e}")
