@@ -33,24 +33,33 @@ def obtener_credenciales_google():
         st.stop()
 
 def conectar_sheets():
+    # 1. Autorización de seguridad
     try:
         creds = obtener_credenciales_google()
         client = gspread.authorize(creds)
+    except Exception as e:
+        st.error(f"🚨 Error 1 - Fallo en credenciales: {e}")
+        st.stop()
         
-        # Conexión directa a tu archivo
-        sheet_url = "https://docs.google.com/spreadsheets/d/1mAasQyEscIC194XW54WQF_VcyaIqJKFj/edit"
-        planilla = client.open_by_url(sheet_url)
+    # 2. Conexión directa mediante ID (Sin usar la URL entera)
+    try:
+        # Extraemos solo tu código único de la URL
+        sheet_id = "1mAasQyEscIC194XW54WQF_VcyaIqJKFj"
+        planilla = client.open_by_key(sheet_id)
+    except Exception as e:
+        st.error(f"🚨 Error 2 - Fallo al abrir la planilla en Google: {e}")
+        st.stop()
         
-        # Leemos las pestañas que ya creaste manualmente
+    # 3. Lectura de las pestañas
+    try:
         hoja_leads = planilla.sheet1
         hoja_logistica = planilla.worksheet("Logistica")
         hoja_licencias = planilla.worksheet("Licencias")
-            
-        return planilla, hoja_leads, hoja_logistica, hoja_licencias, creds
-        
     except Exception as e:
-        st.error(f"Error conectando a Google Sheets. Detalle técnico: {e}")
+        st.error(f"🚨 Error 3 - Fallo al leer las pestañas: {e}")
         st.stop()
+        
+    return planilla, hoja_leads, hoja_logistica, hoja_licencias, creds
 
 # ==========================================
 # 3. SISTEMA DE LOGIN (CANDADO)
