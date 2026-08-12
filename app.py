@@ -23,13 +23,11 @@ def conectar_google_sheets():
     client = gspread.authorize(credentials)
     return client
 
-try:
+ try:
     gc = conectar_google_sheets()
-    # Cambia "CRM_Database" por el nombre exacto de tu libro en Google Sheets
-    sh = gc.open("CRM_Database")
+    # Reemplaza 'TU_SPREADSHEET_ID_AQUI' por el ID real que copiaste de la URL
+    sh = gc.open_by_key("TU_SPREADSHEET_ID_AQUI") # ✅ Conexión directa
 except Exception as e:
-    st.error(f"Error al conectar con Google Sheets: {e}")
-    st.stop()
 
 # ==========================================
 # 2. FUNCIÓN PARA CARGAR TABLAS
