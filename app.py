@@ -105,7 +105,7 @@ elif opcion == "Inventario y Precios":
                     st.error("Por favor completa el ID y el Nombre del producto.")
 
     with tab_editar:
-        if not df_prod.empty:
+        if not df_prod.empty and "Nombre" in df_prod.columns:
             prod_sel = st.selectbox("Selecciona un producto para actualizar:", df_prod["Nombre"].tolist())
             if prod_sel:
                 prod_info = df_prod[df_prod["Nombre"] == prod_sel].iloc[0]
@@ -121,7 +121,7 @@ elif opcion == "Inventario y Precios":
                         st.success("Precio y Stock actualizados correctamente.")
                         st.rerun()
         else:
-            st.info("No hay productos cargados en la base de datos.")
+            st.info("No hay productos cargados o falta definir los encabezados en Google Sheets.")
 
 # ==========================================
 # MÓDULO 3: CLIENTES Y CUENTAS CORRIENTES
