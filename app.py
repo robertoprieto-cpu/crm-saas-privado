@@ -239,7 +239,7 @@ st.markdown("---")
 with st.expander("⚙️ Configuración y Conexión de WhatsApp"):
     st.write("Desde aquí puedes conectar tu teléfono escaneando el código QR.")
 
-    EVO_URL = str(st.secrets.get("EVOLUTION_URL", "")).strip().rstrip('/')
+    EVO_URL = "https://TU-SERVICIO-EN-RENDER.onrender.com"
     EVO_KEY = str(st.secrets.get("EVOLUTION_API_KEY", "")).strip()
     INSTANCE_NAME = "crm_whatsapp"
 
