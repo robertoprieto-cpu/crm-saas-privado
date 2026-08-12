@@ -230,7 +230,60 @@ elif opcion == "Gestión de Leads (Mail/WhatsApp)":
                 st.write(f"**Fecha:** {row.get('Fecha', '')}")
                 st.write(f"**Teléfono:** {row.get('Telefono', 'No detectado')}")
                 st.caption(f"**Mensaje:** {row.get('Mensaje', '')}")
-                
+import requests
+import base64
+
+st.markdown("---")
+with st.expander("⚙️ Configuración y Conexión de WhatsApp"):
+    st.write("Desde aquí puedes conectar tu teléfono escaneando el código QR.")
+
+    # Configuración de credenciales
+    EVO_URL = st.secrets.get("EVOLUTION_URL", "")
+    EVO_KEY = st.secrets.get("EVOLUTION_API_KEY", "")
+    INSTANCE_NAME = "crm_whatsapp"
+
+    headers = {
+        "apikey": EVO_KEY,
+        "Content-Type": "application/json"
+    }
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if st.button("1. Inicializar Instancia"):
+            payload = {
+                "instanceName": INSTANCE_NAME,
+                "qrcode": True,
+                "integration": "WHATSAPP-BAILEYS"
+            }
+            try:
+                res = requests.post(f"{EVO_URL}/instance/create", json=payload, headers=headers)
+                if res.status_code in [200, 201]:
+                    st.success("Instancia creada. Ahora haz clic en 'Generar Código QR'.")
+                else:
+                    st.info("La instancia ya está creada.")
+            except Exception as e:
+                st.error("Error al conectar con el servidor de Render.")
+
+    with col2:
+        if st.button("2. Generar Código QR"):
+            try:
+                res = requests.get(f"{EVO_URL}/instance/connect/{INSTANCE_NAME}", headers=headers)
+                if res.status_code == 200:
+                    data = res.json()
+                    qr_code_base64 = data.get("base64")
+                    
+                    if qr_code_base64:
+                        if "," in qr_code_base64:
+                            qr_code_base64 = qr_code_base64.split(",")[1]
+                        img_bytes = base64.b64decode(qr_code_base64)
+                        st.image(img_bytes, caption="Escanea este QR desde tu celular", width=300)
+                    else:
+                        st.success("¡Tu WhatsApp ya está conectado!")
+                else:
+                    st.error("Error al obtener QR. Primero inicializa la instancia.")
+            except Exception as e:
+                st.error("Error al conectar con el servidor de Render.")                
                 if row.get('Telefono') and str(row.get('Telefono')) != "No detectado":
                     tel_limpio = re.sub(r'\D', '', str(row['Telefono']))
                     wa_url = f"https://wa.me/{tel_limpio}?text=Hola,%20recibimos%20tu%20consulta"
