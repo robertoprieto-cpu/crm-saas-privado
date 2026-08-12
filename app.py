@@ -230,6 +230,8 @@ elif opcion == "Gestión de Leads (Mail/WhatsApp)":
                 st.write(f"**Fecha:** {row.get('Fecha', '')}")
                 st.write(f"**Teléfono:** {row.get('Telefono', 'No detectado')}")
                 st.caption(f"**Mensaje:** {row.get('Mensaje', '')}")
+
+
 import requests
 import base64
 
@@ -237,9 +239,8 @@ st.markdown("---")
 with st.expander("⚙️ Configuración y Conexión de WhatsApp"):
     st.write("Desde aquí puedes conectar tu teléfono escaneando el código QR.")
 
-    # Configuración de credenciales
-    EVO_URL = st.secrets.get("EVOLUTION_URL", "")
-    EVO_KEY = st.secrets.get("EVOLUTION_API_KEY", "")
+    EVO_URL = str(st.secrets.get("EVOLUTION_URL", "")).strip().rstrip('/')
+    EVO_KEY = str(st.secrets.get("EVOLUTION_API_KEY", "")).strip()
     INSTANCE_NAME = "crm_whatsapp"
 
     headers = {
@@ -257,22 +258,21 @@ with st.expander("⚙️ Configuración y Conexión de WhatsApp"):
                 "integration": "WHATSAPP-BAILEYS"
             }
             try:
-                res = requests.post(f"{EVO_URL}/instance/create", json=payload, headers=headers)
+                res = requests.post(f"{EVO_URL}/instance/create", json=payload, headers=headers, timeout=10)
                 if res.status_code in [200, 201]:
-                    st.success("Instancia creada. Ahora haz clic en 'Generar Código QR'.")
+                    st.success("Instancia creada correctamente.")
                 else:
-                    st.info("La instancia ya está creada.")
-            except Exception as e:
-                st.error("Error al conectar con el servidor de Render.")
+                    st.info(f"Instancia lista (Respuesta {res.status_code}).")
+            except Exception as err:
+                st.error(f"No se pudo conectar a Render: {err}")
 
     with col2:
         if st.button("2. Generar Código QR"):
             try:
-                res = requests.get(f"{EVO_URL}/instance/connect/{INSTANCE_NAME}", headers=headers)
+                res = requests.get(f"{EVO_URL}/instance/connect/{INSTANCE_NAME}", headers=headers, timeout=10)
                 if res.status_code == 200:
                     data = res.json()
-                    qr_code_base64 = data.get("base64")
-                    
+                    qr_code_base64 = data.get("base64") or data.get("code")
                     if qr_code_base64:
                         if "," in qr_code_base64:
                             qr_code_base64 = qr_code_base64.split(",")[1]
@@ -281,10 +281,6 @@ with st.expander("⚙️ Configuración y Conexión de WhatsApp"):
                     else:
                         st.success("¡Tu WhatsApp ya está conectado!")
                 else:
-                    st.error("Error al obtener QR. Primero inicializa la instancia.")
-            except Exception as e:
-                st.error("Error al conectar con el servidor de Render.")                
-                if row.get('Telefono') and str(row.get('Telefono')) != "No detectado":
-                    tel_limpio = re.sub(r'\D', '', str(row['Telefono']))
-                    wa_url = f"https://wa.me/{tel_limpio}?text=Hola,%20recibimos%20tu%20consulta"
-                    st.markdown(f"[💬 Contactar por WhatsApp]({wa_url})", unsafe_allow_html=True)
+                    st.error("Primero haz clic en '1. Inicializar Instancia'.")
+            except Exception as err:
+                st.error(f"No se pudo conectar a Render: {err}")
