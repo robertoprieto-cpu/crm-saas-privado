@@ -35,11 +35,7 @@ def obtener_credenciales_google():
 def conectar_sheets():
     # 1. Autorización de seguridad
     try:
-        creds = obtener_credenciales_google()
-        client = gspread.authorize(creds)
-    except Exception as e:
-        st.error(f"🚨 Error 1 - Fallo en credenciales: {e}")
-        st.stop()
+        "1uCTuFEK6MvR7b0U_hKjisUuGJbyDFgGDJoIObUuyFZE/edit?gid=0#gid=0"
         
     # 2. Conexión directa mediante ID (Sin usar la URL entera)
     try:
