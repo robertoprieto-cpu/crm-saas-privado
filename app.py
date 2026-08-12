@@ -22,13 +22,11 @@ def conectar_google_sheets():
     credentials = Credentials.from_service_account_info(creds_dict, scopes=scope)
     client = gspread.authorize(credentials)
     return client
-
- try:
+try:
     gc = conectar_google_sheets()
     # Reemplaza 'TU_SPREADSHEET_ID_AQUI' por el ID real que copiaste de la URL
-    sh = gc.open_by_key("TU_SPREADSHEET_ID_AQUI") # ✅ Conexión directa
+    sh = gc.open_by_key("d/1uCTuFEK6MvR7b0U_hKjisUuGJbyDFgGDJoIObUuyFZE/edit?gid=245287206#gid=245287206") # ✅ Conexión directa
 except Exception as e:
-
 # ==========================================
 # 2. FUNCIÓN PARA CARGAR TABLAS
 # ==========================================
