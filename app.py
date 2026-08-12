@@ -24,9 +24,10 @@ def conectar_google_sheets():
     return client
 try:
     gc = conectar_google_sheets()
-    # Reemplaza 'TU_SPREADSHEET_ID_AQUI' por el ID real que copiaste de la URL
-  sh = gc.open_by_key("d/1uCTuFEK6MvR7b0U_hKjisUuGJbyDFgGDJoIObUuyFZE/edit?gid=245287206#gid=245287206") # ✅ Conexión directa
+    sh = gc.open_by_key("1uCTuFEK6MvR7b0U_hKjisUuGJbyDFgGDJoIObUuyFZE")
 except Exception as e:
+    st.error(f"Error al conectar con Google Sheets: {e}")
+    st.stop()
 # ==========================================
 # 2. FUNCIÓN PARA CARGAR TABLAS
 # ==========================================
