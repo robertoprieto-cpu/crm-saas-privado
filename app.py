@@ -1,10 +1,11 @@
 import streamlit as st
 import gspread
+import pandas as pd
 from google.oauth2.service_account import Credentials
 from datetime import datetime
 
 # ==========================================
-# CONFIGURACIÓN DE PÁGINA Y CLAVES
+# 1. CONFIGURACIÓN DE PÁGINA Y CLAVES
 # ==========================================
 st.set_page_config(
     page_title="CRM Pro - Ventas & Logística",
@@ -14,6 +15,9 @@ st.set_page_config(
 
 MASTER_KEY = st.secrets.get("MASTER_KEY", "ADMIN_PROPIETARIO_2026_SECURE")
 
+# ==========================================
+# 2. FUNCIONES DE CONEXIÓN A GOOGLE
+# ==========================================
 def obtener_credenciales_google():
     try:
         creds_dict = dict(st.secrets["gcp_service_account"])
@@ -57,3 +61,87 @@ def conectar_sheets():
     except Exception as e:
         st.error(f"Error conectando a Google Sheets. Detalle técnico: {e}")
         st.stop()
+
+# ==========================================
+# 3. SISTEMA DE LOGIN (CANDADO)
+# ==========================================
+def check_password():
+    if "logged_in" not in st.session_state:
+        st.session_state["logged_in"] = False
+
+    if not st.session_state["logged_in"]:
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            st.title("🔒 Acceso Seguro - CRM")
+            st.markdown("Por favor, ingresa tu clave maestra para continuar.")
+            
+            clave_ingresada = st.text_input("Contraseña", type="password")
+            if st.button("Ingresar", use_container_width=True):
+                if clave_ingresada == MASTER_KEY:
+                    st.session_state["logged_in"] = True
+                    st.rerun()
+                else:
+                    st.error("❌ Clave incorrecta. Intenta nuevamente.")
+        return False
+    return True
+
+# ==========================================
+# 4. INTERFAZ PRINCIPAL DEL CRM
+# ==========================================
+def main():
+    if not check_password():
+        return
+        
+    # Menú lateral
+    st.sidebar.title("⚡ Panel de Navegación")
+    menu = st.sidebar.radio("Ir a la sección:", ["Ventas y Leads", "Logística y Envíos", "Licencias"])
+    
+    st.sidebar.markdown("---")
+    if st.sidebar.button("Salir / Cerrar Sesión"):
+        st.session_state["logged_in"] = False
+        st.rerun()
+        
+    # Mensaje de carga
+    with st.spinner("Conectando con Google Sheets y Drive..."):
+        try:
+            planilla, hoja_leads, hoja_logistica, hoja_licencias, creds = conectar_sheets()
+        except Exception:
+            st.stop()
+
+    # Pantallas según el menú elegido
+    if menu == "Ventas y Leads":
+        st.header("📊 Gestión de Ventas y Leads")
+        st.info("Datos actuales en tu Base de Datos (Hoja 1):")
+        try:
+            datos = hoja_leads.get_all_records()
+            if datos:
+                st.dataframe(pd.DataFrame(datos), use_container_width=True)
+            else:
+                st.warning("La hoja principal está vacía. Añade datos en tu Google Sheets.")
+        except Exception as e:
+            st.error(f"No se pudieron cargar los datos de Leads: {e}")
+
+    elif menu == "Logística y Envíos":
+        st.header("📦 Control de Logística")
+        try:
+            datos_log = hoja_logistica.get_all_records()
+            if datos_log:
+                st.dataframe(pd.DataFrame(datos_log), use_container_width=True)
+            else:
+                st.warning("No hay pedidos registrados en Logística.")
+        except Exception:
+            pass
+
+    elif menu == "Licencias":
+        st.header("🔑 Administración de Licencias")
+        try:
+            datos_lic = hoja_licencias.get_all_records()
+            if datos_lic:
+                st.dataframe(pd.DataFrame(datos_lic), use_container_width=True)
+            else:
+                st.warning("No hay licencias registradas.")
+        except Exception:
+            pass
+
+if __name__ == "__main__":
+    main()
