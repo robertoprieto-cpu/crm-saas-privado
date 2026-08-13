@@ -230,7 +230,7 @@ elif opcion == "Gestión de Leads (Mail/WhatsApp)":
                 st.write(f"**Fecha:** {row.get('Fecha', '')}")
                 st.write(f"**Teléfono:** {row.get('Telefono', 'No detectado')}")
                 st.caption(f"**Mensaje:** {row.get('Mensaje', '')}")
-              import requests
+import requests
 import base64
 
 # --- FUNCIÓN PARA ENVIAR WHATSAPP (Reutilizable) ---
@@ -266,7 +266,6 @@ def enviar_whatsapp(numero, mensaje):
 st.markdown("---")
 st.subheader("📲 Envío Directo de WhatsApp a Contactos")
 
-# Búsqueda segura del DataFrame de contactos
 df_contactos = None
 
 if 'df_leads' in st.session_state:
@@ -282,14 +281,12 @@ if df_contactos is not None and hasattr(df_contactos, 'empty') and not df_contac
     col_sel, col_msg = st.columns([1, 2])
     
     with col_sel:
-        # Detectar columnas de Nombre y Teléfono
         col_nombre = 'Nombre' if 'Nombre' in df_contactos.columns else df_contactos.columns[0]
         col_telefono = 'Telefono' if 'Telefono' in df_contactos.columns else ('Teléfono' if 'Teléfono' in df_contactos.columns else df_contactos.columns[1])
 
         nombres = df_contactos[col_nombre].dropna().unique().tolist()
         cliente_sel = st.selectbox("Selecciona un cliente:", nombres)
         
-        # Obtener datos del cliente seleccionado
         fila = df_contactos[df_contactos[col_nombre] == cliente_sel].iloc[0] if cliente_sel else None
         telefono_cliente = fila.get(col_telefono, '') if fila is not None else ''
         
@@ -344,5 +341,4 @@ with st.expander("⚙️ Estado de la Conexión de WhatsApp"):
                     else:
                         st.success("¡Tu WhatsApp está conectado y listo!")
             except Exception as err:
-                st.error(f"Error: {err}")
-
+                st.error(f"Error: {err}")             
