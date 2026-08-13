@@ -237,8 +237,9 @@ import base64
 
 st.markdown("---")
 with st.expander("⚙️ Configuración y Conexión de WhatsApp"):
-    st.write("Desde aquí puedes conectar tu teléfono escaneando el código QR.")
+    st.write("Desde aquí puedes gestionar tu conexión a WhatsApp y probar el envío de mensajes.")
 
+    # Asegúrate de que esta sea tu clave real si la cambiaste
     EVO_URL = "https://evolution-api-latest-1-ggcm.onrender.com"
     EVO_KEY = "MiClaveSuperSeguraCRM2026"
     INSTANCE_NAME = "crm_whatsapp"
@@ -258,13 +259,13 @@ with st.expander("⚙️ Configuración y Conexión de WhatsApp"):
                 "integration": "WHATSAPP-BAILEYS"
             }
             try:
-                res = requests.post(f"{EVO_URL}/instance/create", json=payload, headers=headers, timeout=10)
+                res = requests.post(f"{EVO_URL}/instance/create", json=payload, headers=headers, timeout=60)
                 if res.status_code in [200, 201]:
-                    st.success("Instancia creada correctamente.")
+                    st.success("Instancia inicializada correctamente.")
                 else:
-                    st.info(f"Instancia lista (Respuesta {res.status_code}).")
+                    st.info(f"Instancia lista. (Código {res.status_code})")
             except Exception as err:
-                st.error(f"No se pudo conectar a Render: {err}")
+                st.error(f"Error: {err}")
 
     with col2:
         if st.button("2. Generar Código QR"):
@@ -277,10 +278,35 @@ with st.expander("⚙️ Configuración y Conexión de WhatsApp"):
                         if "," in qr_code_base64:
                             qr_code_base64 = qr_code_base64.split(",")[1]
                         img_bytes = base64.b64decode(qr_code_base64)
-                        st.image(img_bytes, caption="Escanea este QR desde tu celular", width=300)
+                        st.image(img_bytes, caption="Escanea este QR", width=300)
                     else:
                         st.success("¡Tu WhatsApp ya está conectado!")
                 else:
-                    st.error("Primero haz clic en '1. Inicializar Instancia'.")
+                    st.error("Primero inicializa la instancia.")
             except Exception as err:
-                st.error(f"No se pudo conectar a Render: {err}")
+                st.error(f"Error: {err}")
+
+    st.markdown("---")
+    st.write("### 🚀 Prueba de Envío de Mensaje")
+    
+    # Formato Internacional: Código de país (54) + 9 (celular en Arg) + Código de área (sin 0) + Número (sin 15)
+    test_number = st.text_input("Número de WhatsApp destino (Ej. para Argentina: 5491123456789):")
+    test_message = st.text_area("Mensaje a enviar:", "¡Hola! Este es mi primer mensaje automático desde mi nuevo CRM. 🚀")
+    
+    if st.button("3. Enviar Mensaje de Prueba"):
+        if test_number and test_message:
+            send_url = f"{EVO_URL}/message/sendText/{INSTANCE_NAME}"
+            payload_send = {
+                "number": test_number,
+                "text": test_message
+            }
+            try:
+                res_send = requests.post(send_url, json=payload_send, headers=headers, timeout=60)
+                if res_send.status_code in [200, 201]:
+                    st.success("✅ ¡Mensaje enviado con éxito! Revisa tu celular.")
+                else:
+                    st.error(f"⚠️ Error al enviar: {res_send.text}")
+            except Exception as e:
+                st.error(f"⚠️ Error de conexión: {e}")
+        else:
+            st.warning("Por favor, completa el número y el mensaje.")
