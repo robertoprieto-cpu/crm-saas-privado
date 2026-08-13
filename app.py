@@ -230,83 +230,113 @@ elif opcion == "Gestión de Leads (Mail/WhatsApp)":
                 st.write(f"**Fecha:** {row.get('Fecha', '')}")
                 st.write(f"**Teléfono:** {row.get('Telefono', 'No detectado')}")
                 st.caption(f"**Mensaje:** {row.get('Mensaje', '')}")
-
-
-import requests
+                import requests
 import base64
 
-st.markdown("---")
-with st.expander("⚙️ Configuración y Conexión de WhatsApp"):
-    st.write("Desde aquí puedes gestionar tu conexión a WhatsApp y probar el envío de mensajes.")
-
-    # Asegúrate de que esta sea tu clave real si la cambiaste
+# --- FUNCIÓN PARA ENVIAR WHATSAPP (Reutilizable en todo el CRM) ---
+def enviar_whatsapp(numero, mensaje):
     EVO_URL = "https://evolution-api-latest-1-ggcm.onrender.com"
     EVO_KEY = "MiClaveSuperSeguraCRM2026"
     INSTANCE_NAME = "crm_whatsapp"
+
+    # Limpiar el número (dejar solo dígitos)
+    numero_limpio = ''.join(filter(str.isdigit, str(numero)))
 
     headers = {
         "apikey": EVO_KEY,
         "Content-Type": "application/json"
     }
+    url = f"{EVO_URL}/message/sendText/{INSTANCE_NAME}"
+    payload = {
+        "number": numero_limpio,
+        "text": mensaje
+    }
 
-    col1, col2 = st.columns(2)
+    try:
+        res = requests.post(url, json=payload, headers=headers, timeout=30)
+        if res.status_code in [200, 201]:
+            return True, "Mensaje enviado con éxito."
+        else:
+            return False, f"Error de servidor ({res.status_code}): {res.text}"
+    except Exception as e:
+        return False, f"Error de conexión: {e}"
 
-    with col1:
-        if st.button("1. Inicializar Instancia"):
-            payload = {
-                "instanceName": INSTANCE_NAME,
-                "qrcode": True,
-                "integration": "WHATSAPP-BAILEYS"
-            }
-            try:
-                res = requests.post(f"{EVO_URL}/instance/create", json=payload, headers=headers, timeout=60)
-                if res.status_code in [200, 201]:
-                    st.success("Instancia inicializada correctamente.")
+
+# --- MÓDULO DE ENVÍO DIRECTO A CONTACTOS ---
+st.markdown("---")
+st.subheader("📲 Envío Directo de WhatsApp a Contactos")
+
+# Verificamos si existen datos de contactos/leads en la sesión de Streamlit
+if 'df' in st.locals or 'df' in globals() or 'df_leads' in st.session_state:
+    # Usamos la tabla cargada previamente en tu CRM (adaptar según la variable de tu dataframe)
+    df_contactos = st.session_state.get('df_leads', None)
+    
+    if df_contactos is not None and not df_contactos.empty:
+        col_sel, col_msg = st.columns([1, 2])
+        
+        with col_sel:
+            # Lista desplegable para seleccionar un cliente de la tabla
+            nombres = df_contactos['Nombre'].dropna().unique().tolist() if 'Nombre' in df_contactos.columns else []
+            cliente_sel = st.selectbox("Selecciona un cliente:", nombres)
+            
+            # Obtener datos del cliente seleccionado
+            fila = df_contactos[df_contactos['Nombre'] == cliente_sel].iloc[0] if cliente_sel else None
+            telefono_cliente = fila.get('Telefono', '') if fila is not None else ''
+            
+            st.info(f"📞 **Teléfono registrado:** {telefono_cliente}")
+
+        with col_msg:
+            # Plantilla editable personalizada
+            mensaje_defecto = f"Hola {cliente_sel}, te escribimos desde el CRM para brindarte novedades sobre tu consulta. ¡Quedamos a tu disposición!"
+            mensaje_personalizado = st.text_area("Mensaje a enviar:", value=mensaje_defecto, height=120)
+
+            if st.button("🚀 Enviar WhatsApp al Cliente", type="primary"):
+                if telefono_cliente and mensaje_personalizado:
+                    exito, resp = enviar_whatsapp(telefono_cliente, mensaje_personalizado)
+                    if exito:
+                        st.success(f"✅ ¡Mensaje enviado a {cliente_sel}!")
+                    else:
+                        st.error(f"⚠️ {resp}")
                 else:
-                    st.info(f"Instancia lista. (Código {res.status_code})")
+                    st.warning("Verifica que el cliente tenga un número asignado.")
+    else:
+        st.info("Carga o selecciona una lista de clientes en el CRM para habilitar el envío rápido.")
+else:
+        st.info("Carga o selecciona una lista de clientes en el CRM para habilitar el envío rápido.")
+
+
+# --- CONFIGURACIÓN DE CONEXIÓN Y QR ---
+with st.expander("⚙️ Estado de la Conexión de WhatsApp"):
+    st.write("Administra la instancia y genera el QR si requieres reconectar.")
+    EVO_URL = "https://evolution-api-latest-1-ggcm.onrender.com"
+    EVO_KEY = "MiClaveSuperSeguraCRM2026"
+    INSTANCE_NAME = "crm_whatsapp"
+    headers = {"apikey": EVO_KEY, "Content-Type": "application/json"}
+
+    c1, c2 = st.columns(2)
+    with c1:
+        if st.button("Inicializar Instancia"):
+            payload = {"instanceName": INSTANCE_NAME, "qrcode": True, "integration": "WHATSAPP-BAILEYS"}
+            try:
+                res = requests.post(f"{EVO_URL}/instance/create", json=payload, headers=headers, timeout=30)
+                st.info(f"Estado de instancia: {res.status_code}")
             except Exception as err:
                 st.error(f"Error: {err}")
 
-    with col2:
-        if st.button("2. Generar Código QR"):
+    with c2:
+        if st.button("Generar Código QR"):
             try:
-                res = requests.get(f"{EVO_URL}/instance/connect/{INSTANCE_NAME}", headers=headers, timeout=60)
+                res = requests.get(f"{EVO_URL}/instance/connect/{INSTANCE_NAME}", headers=headers, timeout=30)
                 if res.status_code == 200:
                     data = res.json()
                     qr_code_base64 = data.get("base64") or data.get("code")
                     if qr_code_base64:
                         if "," in qr_code_base64:
                             qr_code_base64 = qr_code_base64.split(",")[1]
-                        img_bytes = base64.b64decode(qr_code_base64)
-                        st.image(img_bytes, caption="Escanea este QR", width=300)
+                        st.image(base64.b64decode(qr_code_base64), width=300)
                     else:
-                        st.success("¡Tu WhatsApp ya está conectado!")
-                else:
-                    st.error("Primero inicializa la instancia.")
+                        st.success("¡Tu WhatsApp está conectado y listo!")
             except Exception as err:
                 st.error(f"Error: {err}")
 
-    st.markdown("---")
-    st.write("### 🚀 Prueba de Envío de Mensaje")
-    
-    # Formato Internacional: Código de país (54) + 9 (celular en Arg) + Código de área (sin 0) + Número (sin 15)
-    test_number = st.text_input("Número de WhatsApp destino (Ej. para Argentina: 5491123456789):")
-    test_message = st.text_area("Mensaje a enviar:", "¡Hola! Este es mi primer mensaje automático desde mi nuevo CRM. 🚀")
-    
-    if st.button("3. Enviar Mensaje de Prueba"):
-        if test_number and test_message:
-            send_url = f"{EVO_URL}/message/sendText/{INSTANCE_NAME}"
-            payload_send = {
-                "number": test_number,
-                "text": test_message
-            }
-            try:
-                res_send = requests.post(send_url, json=payload_send, headers=headers, timeout=60)
-                if res_send.status_code in [200, 201]:
-                    st.success("✅ ¡Mensaje enviado con éxito! Revisa tu celular.")
-                else:
-                    st.error(f"⚠️ Error al enviar: {res_send.text}")
-            except Exception as e:
-                st.error(f"⚠️ Error de conexión: {e}")
-        else:
-            st.warning("Por favor, completa el número y el mensaje.")
+
