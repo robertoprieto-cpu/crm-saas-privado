@@ -269,7 +269,7 @@ with st.expander("⚙️ Configuración y Conexión de WhatsApp"):
     with col2:
         if st.button("2. Generar Código QR"):
             try:
-                res = requests.get(f"{EVO_URL}/instance/connect/{INSTANCE_NAME}", headers=headers, timeout=10)
+                res = requests.get(f"{EVO_URL}/instance/connect/{INSTANCE_NAME}", headers=headers, timeout=60)
                 if res.status_code == 200:
                     data = res.json()
                     qr_code_base64 = data.get("base64") or data.get("code")
