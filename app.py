@@ -230,10 +230,10 @@ elif opcion == "Gestión de Leads (Mail/WhatsApp)":
                 st.write(f"**Fecha:** {row.get('Fecha', '')}")
                 st.write(f"**Teléfono:** {row.get('Telefono', 'No detectado')}")
                 st.caption(f"**Mensaje:** {row.get('Mensaje', '')}")
-                import requests
+              import requests
 import base64
 
-# --- FUNCIÓN PARA ENVIAR WHATSAPP (Reutilizable en todo el CRM) ---
+# --- FUNCIÓN PARA ENVIAR WHATSAPP (Reutilizable) ---
 def enviar_whatsapp(numero, mensaje):
     EVO_URL = "https://evolution-api-latest-1-ggcm.onrender.com"
     EVO_KEY = "MiClaveSuperSeguraCRM2026"
@@ -266,43 +266,50 @@ def enviar_whatsapp(numero, mensaje):
 st.markdown("---")
 st.subheader("📲 Envío Directo de WhatsApp a Contactos")
 
-# Verificamos si existen datos de contactos/leads en la sesión de Streamlit
-if 'df' in st.locals or 'df' in globals() or 'df_leads' in st.session_state:
-    # Usamos la tabla cargada previamente en tu CRM (adaptar según la variable de tu dataframe)
-    df_contactos = st.session_state.get('df_leads', None)
+# Búsqueda segura del DataFrame de contactos
+df_contactos = None
+
+if 'df_leads' in st.session_state:
+    df_contactos = st.session_state['df_leads']
+elif 'df' in st.session_state:
+    df_contactos = st.session_state['df']
+elif 'df' in locals():
+    df_contactos = locals()['df']
+elif 'df' in globals():
+    df_contactos = globals()['df']
+
+if df_contactos is not None and hasattr(df_contactos, 'empty') and not df_contactos.empty:
+    col_sel, col_msg = st.columns([1, 2])
     
-    if df_contactos is not None and not df_contactos.empty:
-        col_sel, col_msg = st.columns([1, 2])
+    with col_sel:
+        # Detectar columnas de Nombre y Teléfono
+        col_nombre = 'Nombre' if 'Nombre' in df_contactos.columns else df_contactos.columns[0]
+        col_telefono = 'Telefono' if 'Telefono' in df_contactos.columns else ('Teléfono' if 'Teléfono' in df_contactos.columns else df_contactos.columns[1])
+
+        nombres = df_contactos[col_nombre].dropna().unique().tolist()
+        cliente_sel = st.selectbox("Selecciona un cliente:", nombres)
         
-        with col_sel:
-            # Lista desplegable para seleccionar un cliente de la tabla
-            nombres = df_contactos['Nombre'].dropna().unique().tolist() if 'Nombre' in df_contactos.columns else []
-            cliente_sel = st.selectbox("Selecciona un cliente:", nombres)
-            
-            # Obtener datos del cliente seleccionado
-            fila = df_contactos[df_contactos['Nombre'] == cliente_sel].iloc[0] if cliente_sel else None
-            telefono_cliente = fila.get('Telefono', '') if fila is not None else ''
-            
-            st.info(f"📞 **Teléfono registrado:** {telefono_cliente}")
+        # Obtener datos del cliente seleccionado
+        fila = df_contactos[df_contactos[col_nombre] == cliente_sel].iloc[0] if cliente_sel else None
+        telefono_cliente = fila.get(col_telefono, '') if fila is not None else ''
+        
+        st.info(f"📞 **Teléfono:** {telefono_cliente}")
 
-        with col_msg:
-            # Plantilla editable personalizada
-            mensaje_defecto = f"Hola {cliente_sel}, te escribimos desde el CRM para brindarte novedades sobre tu consulta. ¡Quedamos a tu disposición!"
-            mensaje_personalizado = st.text_area("Mensaje a enviar:", value=mensaje_defecto, height=120)
+    with col_msg:
+        mensaje_defecto = f"Hola {cliente_sel}, te escribimos desde el CRM para brindarte novedades sobre tu consulta. ¡Quedamos a tu disposición!"
+        mensaje_personalizado = st.text_area("Mensaje a enviar:", value=mensaje_defecto, height=120)
 
-            if st.button("🚀 Enviar WhatsApp al Cliente", type="primary"):
-                if telefono_cliente and mensaje_personalizado:
-                    exito, resp = enviar_whatsapp(telefono_cliente, mensaje_personalizado)
-                    if exito:
-                        st.success(f"✅ ¡Mensaje enviado a {cliente_sel}!")
-                    else:
-                        st.error(f"⚠️ {resp}")
+        if st.button("🚀 Enviar WhatsApp al Cliente", type="primary"):
+            if telefono_cliente and mensaje_personalizado:
+                exito, resp = enviar_whatsapp(telefono_cliente, mensaje_personalizado)
+                if exito:
+                    st.success(f"✅ ¡Mensaje enviado a {cliente_sel}!")
                 else:
-                    st.warning("Verifica que el cliente tenga un número asignado.")
-    else:
-        st.info("Carga o selecciona una lista de clientes en el CRM para habilitar el envío rápido.")
+                    st.error(f"⚠️ {resp}")
+            else:
+                st.warning("Verifica que el cliente tenga un número asignado.")
 else:
-        st.info("Carga o selecciona una lista de clientes en el CRM para habilitar el envío rápido.")
+    st.info("💡 Carga o selecciona una lista de clientes en el CRM para habilitar el envío rápido.")
 
 
 # --- CONFIGURACIÓN DE CONEXIÓN Y QR ---
@@ -338,5 +345,4 @@ with st.expander("⚙️ Estado de la Conexión de WhatsApp"):
                         st.success("¡Tu WhatsApp está conectado y listo!")
             except Exception as err:
                 st.error(f"Error: {err}")
-
 
