@@ -240,7 +240,7 @@ with st.expander("⚙️ Configuración y Conexión de WhatsApp"):
     st.write("Desde aquí puedes conectar tu teléfono escaneando el código QR.")
 
     EVO_URL = "https://evolution-api-latest-1-ggcm.onrender.com"
-    EVO_KEY = str(st.secrets.get("EVOLUTION_API_KEY", "")).strip()
+    EVO_KEY = "MiClaveSuperSeguraCRM2026"
     INSTANCE_NAME = "crm_whatsapp"
 
     headers = {
