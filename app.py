@@ -10,7 +10,7 @@ st.title("📊 CRM de Leads en Tiempo Real")
 st.write("Leads capturados automáticamente desde Gmail")
 
 # ⚠️ PEGA AQUÍ TU ENLACE COMPLETO DE "PUBLICAR EN LA WEB"
-URL_CSV = "PEGA_AQUI_TU_ENLACE_DE_PUBLICAR_EN_LA_WEB"
+URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRU1E0XEW3vl9qTtaRQvPapZpPjQyoxFXKSg3fq3ac1Jy3Tym_ZsZoyKyrEXQKGc9-_PBH3IL775do0/pub?output=csv"
 
 
 # Función de carga directa
