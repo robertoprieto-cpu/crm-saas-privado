@@ -273,4 +273,4 @@ with st.expander("⚙️ Estado de la Conexión de WhatsApp"):
                     else:
                         st.success("¡Tu WhatsApp está conectado y listo!")
             except Exception as err:
-                
+                st.error(f"Error: {err}")               
