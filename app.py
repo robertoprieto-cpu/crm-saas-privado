@@ -146,6 +146,7 @@ elif opcion == "Clientes y Cuentas Corrientes":
                     ws_cli.append_row([id_cli, nombre_cli, tel_cli, email_cli, 0.0])
                     st.success(f"Cliente '{nombre_cli}' registrado exitosamente.")
                     st.rerun()
+st.error(f"Error: {err}")
 import requests
 import base64
 
@@ -155,8 +156,11 @@ def enviar_whatsapp(numero, mensaje):
     EVO_KEY = "MiClaveSuperSeguraCRM2026"
     INSTANCE_NAME = "crm_whatsapp"
 
-    # Filtro de seguridad: limpiar nulos y dejar solo números
+    # Limpieza del número: Quita el decimal .0 si Excel lo agregó
     numero_str = str(numero).lower().replace('nan', '').strip()
+    if numero_str.endswith('.0'):
+        numero_str = numero_str[:-2]
+        
     numero_limpio = ''.join(filter(str.isdigit, numero_str))
 
     if not numero_limpio:
@@ -173,7 +177,7 @@ def enviar_whatsapp(numero, mensaje):
     }
 
     try:
-        res = requests.post(url, json=payload, headers=headers, timeout=30)
+        res = requests.post(url, json=payload, headers=headers, timeout=60)
         if res.status_code in [200, 201]:
             return True, "Mensaje enviado con éxito."
         else:
@@ -199,37 +203,28 @@ for nombre_var in ['df_contactos', 'df_cli', 'df_leads', 'df']:
         break
 
 if df_actual is not None and hasattr(df_actual, 'empty') and not df_actual.empty:
-    col_nombre = None
-    for col in df_actual.columns:
-        if str(col).strip().lower() in ['nombre', 'cliente', 'contacto', 'lead', 'nombres', 'customer']:
-            col_nombre = col
-            break
+    
+    # Fuerzo las columnas exactas de tu Excel
+    col_nombre = 'Nombre' if 'Nombre' in df_actual.columns else df_actual.columns[1]
+    col_telefono = 'Teléfono' if 'Teléfono' in df_actual.columns else ('Telefono' if 'Telefono' in df_actual.columns else df_actual.columns[2])
 
-    if not col_nombre and len(df_actual.columns) > 0:
-        col_nombre = df_actual.columns[0]
-
-    lista_clientes = df_actual[col_nombre].dropna().astype(str).tolist() if col_nombre else []
+    lista_clientes = df_actual[col_nombre].dropna().astype(str).tolist()
 
     cliente_sel = st.selectbox("Seleccionar Cliente:", lista_clientes)
 
     if cliente_sel:
-        col_telefono = None
-        for col in df_actual.columns:
-            if str(col).strip().lower() in ['telefono', 'teléfono', 'celular', 'phone', 'mobile', 'wa', 'whatsapp']:
-                col_telefono = col
-                break
-
-        if not col_telefono and len(df_actual.columns) > 1:
-            col_telefono = df_actual.columns[1]
-
         fila = df_actual[df_actual[col_nombre].astype(str) == cliente_sel].iloc[0]
-        telefono_cliente = str(fila.get(col_telefono, '')) if col_telefono else ''
+        telefono_bruto = str(fila.get(col_telefono, ''))
         
         # Limpieza visual en el CRM
-        if telefono_cliente.lower() == 'nan' or not telefono_cliente.strip():
+        if telefono_bruto.lower() == 'nan' or not telefono_bruto.strip():
             telefono_cliente = ""
+        else:
+            if telefono_bruto.endswith('.0'):
+                telefono_bruto = telefono_bruto[:-2]
+            telefono_cliente = ''.join(filter(str.isdigit, telefono_bruto))
 
-        st.info(f"📞 **Teléfono:** {telefono_cliente if telefono_cliente else 'No registrado'}")
+        st.info(f"📞 **Teléfono detectado:** {telefono_cliente if telefono_cliente else 'No registrado'}")
 
         mensaje_defecto = f"Hola {cliente_sel}, te escribimos desde el CRM para brindarte novedades sobre tu consulta. ¡Quedamos a tu disposición!"
         mensaje_personalizado = st.text_area("Mensaje a enviar:", value=mensaje_defecto, height=120)
@@ -260,7 +255,7 @@ with st.expander("⚙️ Estado de la Conexión de WhatsApp"):
         if st.button("Inicializar Instancia"):
             payload = {"instanceName": INSTANCE_NAME, "qrcode": True, "integration": "WHATSAPP-BAILEYS"}
             try:
-                res = requests.post(f"{EVO_URL}/instance/create", json=payload, headers=headers, timeout=30)
+                res = requests.post(f"{EVO_URL}/instance/create", json=payload, headers=headers, timeout=60)
                 st.info(f"Estado de instancia: {res.status_code}")
             except Exception as err:
                 st.error(f"Error: {err}")
@@ -268,7 +263,7 @@ with st.expander("⚙️ Estado de la Conexión de WhatsApp"):
     with c2:
         if st.button("Generar Código QR"):
             try:
-                res = requests.get(f"{EVO_URL}/instance/connect/{INSTANCE_NAME}", headers=headers, timeout=30)
+                res = requests.get(f"{EVO_URL}/instance/connect/{INSTANCE_NAME}", headers=headers, timeout=60)
                 if res.status_code == 200:
                     data = res.json()
                     qr_code_base64 = data.get("base64") or data.get("code")
