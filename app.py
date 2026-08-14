@@ -13,8 +13,7 @@ st.write("Leads capturados automáticamente desde Gmail")
 SHEET_ID ="d/1813m4Q41th-cU2q3IQXQmhasYRfG7QPD1vdpxrIfFSc/edit?gid=0#gid=0"
 
 # Creamos el enlace automático para leer la hoja
-URL_CSV = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv"
-
+URL_CSV = f"https://docs.google.com/spreadsheets/d/1813m4Q41th-cU2q3IQXQmhasYRfG7QPD1vdpxrIfFSc/edit?gid=0#gid=0"
 
 # Función para cargar los datos (se actualiza cada 30 segundos)
 @st.cache_data(ttl=30)
