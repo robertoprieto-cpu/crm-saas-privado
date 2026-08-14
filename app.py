@@ -10,7 +10,7 @@ st.title("📊 CRM de Leads en Tiempo Real")
 st.write("Leads capturados automáticamente desde Gmail")
 
 # ⚠️ PEGA AQUÍ TU ID DE GOOGLE SHEETS
-SHEET_ID = "d/1813m4Q41th-cU2q3IQXQmhasYRfG7QPD1vdpxrIfFSc/edit?gid=0#gid=0"
+SHEET_ID ="d/1813m4Q41th-cU2q3IQXQmhasYRfG7QPD1vdpxrIfFSc/edit?gid=0#gid=0"
 
 # Creamos el enlace automático para leer la hoja
 URL_CSV = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv"
