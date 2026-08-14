@@ -146,7 +146,6 @@ elif opcion == "Clientes y Cuentas Corrientes":
                     ws_cli.append_row([id_cli, nombre_cli, tel_cli, email_cli, 0.0])
                     st.success(f"Cliente '{nombre_cli}' registrado exitosamente.")
                     st.rerun()
-st.error(f"Error: {err}")
 import requests
 import base64
 
