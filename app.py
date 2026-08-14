@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 
-# Configuración de la página
+# Configuración básica
 st.set_page_config(
     page_title="Mi CRM - Panel de Leads", page_icon="📈", layout="wide"
 )
@@ -9,38 +9,24 @@ st.set_page_config(
 st.title("📊 CRM de Leads en Tiempo Real")
 st.write("Leads capturados automáticamente desde Gmail")
 
-# ⚠️ PEGA AQUÍ TU ID DE GOOGLE SHEETS
-SHEET_ID ="d/1813m4Q41th-cU2q3IQXQmhasYRfG7QPD1vdpxrIfFSc/edit?gid=0#gid=0"
-
-# Creamos el enlace automático para leer la hoja
-URL_CSV = f"https://docs.google.com/spreadsheets/d/e/2PACX-1vRU1E0XEW3vl9qTtaRQvPapZpPjQyoxFXKSg3fq3ac1Jy3Tym_ZsZoyKyrEXQKGc9-_PBH3IL775do0/pub?gid=0&single=true&output=csv"
-
-# Función para cargar los datos (se actualiza cada 30 segundos)
-@st.cache_data(ttl=30)
-def cargar_leads():
-    df = pd.read_csv(URL_CSV)
-    return df
+# ⚠️ PEGA AQUÍ TU ENLACE COMPLETO DE "PUBLICAR EN LA WEB"
+URL_CSV = "PEGA_AQUI_TU_ENLACE_DE_PUBLICAR_EN_LA_WEB"
 
 
-# Botón manual para refrescar los datos en pantalla
-if st.button("🔄 Actualizar Leads"):
-    st.cache_data.clear()
-    st.rerun()
+# Función de carga directa
+def cargar_datos():
+    return pd.read_csv(URL_CSV)
 
-# Intentar cargar y mostrar la tabla
+
+# Intentar mostrar los datos
 try:
-    df_leads = cargar_leads()
+    df_leads = cargar_datos()
 
-    # Muestra el número total de contactos
     st.metric(label="Total de Leads Recibidos", value=len(df_leads))
-
     st.markdown("---")
-
-    # Muestra la tabla interactiva
     st.subheader("📋 Lista de Contactos")
     st.dataframe(df_leads, use_container_width=True)
 
 except Exception as e:
-    st.error(
-        f"Asegúrate de haber puesto bien el ID y que la hoja esté pública. Error: {e}"
-    )
+    st.warning("Cargando datos desde Google Sheets...")
+    st.error(f"Detalle técnico del error: {e}")
