@@ -280,33 +280,51 @@ def enviar_whatsapp(numero, mensaje):
 st.markdown("---")
 st.subheader("📲 Envío Directo de WhatsApp a Contactos")
 
-df_contactos = None
+# --- MÓDULO DE SELECCIÓN Y ENVÍO A CLIENTE ---
+# Detección inteligente de la tabla (busca df_contactos, df_cli o df)
+df_actual = None
+for nombre_var in ['df_contactos', 'df_cli', 'df_leads', 'df']:
+    if nombre_var in st.session_state:
+        df_actual = st.session_state[nombre_var]
+        break
+    elif nombre_var in locals():
+        df_actual = locals()[nombre_var]
+        break
+    elif nombre_var in globals():
+        df_actual = globals()[nombre_var]
+        break
 
-if 'df_leads' in st.session_state:
-    df_contactos = st.session_state['df_leads']
-elif 'df' in st.session_state:
-    df_contactos = st.session_state['df']
-elif 'df' in locals():
-    df_contactos = locals()['df']
-elif 'df' in globals():
-    df_contactos = globals()['df']
+if df_actual is not None and hasattr(df_actual, 'empty') and not df_actual.empty:
+    # Búsqueda dinámica de la columna de nombres
+    col_nombre = None
+    for col in df_actual.columns:
+        if str(col).strip().lower() in ['nombre', 'cliente', 'contacto', 'lead', 'nombres', 'customer']:
+            col_nombre = col
+            break
 
-if df_contactos is not None and hasattr(df_contactos, 'empty') and not df_contactos.empty:
-    col_sel, col_msg = st.columns([1, 2])
-    
-    with col_sel:
-        col_nombre = 'Nombre' if 'Nombre' in df_contactos.columns else df_contactos.columns[0]
-        col_telefono = 'Telefono' if 'Telefono' in df_contactos.columns else ('Teléfono' if 'Teléfono' in df_contactos.columns else df_contactos.columns[1])
+    if not col_nombre and len(df_actual.columns) > 0:
+        col_nombre = df_actual.columns[0]
 
-        nombres = df_contactos[col_nombre].dropna().unique().tolist()
-        cliente_sel = st.selectbox("Selecciona un cliente:", nombres)
-        
-        fila = df_contactos[df_contactos[col_nombre] == cliente_sel].iloc[0] if cliente_sel else None
-        telefono_cliente = fila.get(col_telefono, '') if fila is not None else ''
-        
+    lista_clientes = df_actual[col_nombre].dropna().astype(str).tolist() if col_nombre else []
+
+    cliente_sel = st.selectbox("Seleccionar Cliente:", lista_clientes)
+
+    if cliente_sel:
+        # Búsqueda dinámica de la columna de teléfono
+        col_telefono = None
+        for col in df_actual.columns:
+            if str(col).strip().lower() in ['telefono', 'teléfono', 'celular', 'phone', 'mobile', 'wa', 'whatsapp']:
+                col_telefono = col
+                break
+
+        if not col_telefono and len(df_actual.columns) > 1:
+            col_telefono = df_actual.columns[1]
+
+        fila = df_actual[df_actual[col_nombre].astype(str) == cliente_sel].iloc[0]
+        telefono_cliente = fila.get(col_telefono, '') if col_telefono else ''
+
         st.info(f"📞 **Teléfono:** {telefono_cliente}")
 
-    with col_msg:
         mensaje_defecto = f"Hola {cliente_sel}, te escribimos desde el CRM para brindarte novedades sobre tu consulta. ¡Quedamos a tu disposición!"
         mensaje_personalizado = st.text_area("Mensaje a enviar:", value=mensaje_defecto, height=120)
 
@@ -321,7 +339,6 @@ if df_contactos is not None and hasattr(df_contactos, 'empty') and not df_contac
                 st.warning("Verifica que el cliente tenga un número asignado.")
 else:
     st.info("💡 Carga o selecciona una lista de clientes en el CRM para habilitar el envío rápido.")
-
 
 # --- CONFIGURACIÓN DE CONEXIÓN Y QR ---
 with st.expander("⚙️ Estado de la Conexión de WhatsApp"):
