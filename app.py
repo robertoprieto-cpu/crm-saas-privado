@@ -151,7 +151,21 @@ elif opcion == "Clientes y Cuentas Corrientes":
 
     with tab_cta:
         if not df_cli.empty:
-            cliente_sel = st.selectbox("Seleccionar Cliente:", df_cli["Nombre"].tolist())
+           # Búsqueda dinámica de la columna de nombres en df_cli
+col_nombre = None
+for col in df_cli.columns:
+    if str(col).strip().lower() in ['nombre', 'cliente', 'contacto', 'lead', 'nombres', 'customer']:
+        col_nombre = col
+        break
+
+# Si no encuentra ninguna de las opciones anteriores, usa la primera columna disponible
+if not col_nombre and len(df_cli.columns) > 0:
+    col_nombre = df_cli.columns[0]
+
+# Extrae la lista de clientes de forma segura
+lista_clientes = df_cli[col_nombre].dropna().astype(str).tolist() if col_nombre else []
+
+cliente_sel = st.selectbox("Seleccionar Cliente:", lista_clientes)
             
             if cliente_sel:
                 info_cli = df_cli[df_cli["Nombre"] == cliente_sel].iloc[0]
