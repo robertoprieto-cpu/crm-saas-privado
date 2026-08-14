@@ -155,7 +155,12 @@ def enviar_whatsapp(numero, mensaje):
     EVO_KEY = "MiClaveSuperSeguraCRM2026"
     INSTANCE_NAME = "crm_whatsapp"
 
-    numero_limpio = ''.join(filter(str.isdigit, str(numero)))
+    # Filtro de seguridad: limpiar nulos y dejar solo números
+    numero_str = str(numero).lower().replace('nan', '').strip()
+    numero_limpio = ''.join(filter(str.isdigit, numero_str))
+
+    if not numero_limpio:
+        return False, "No hay un número de teléfono válido para este cliente."
 
     headers = {
         "apikey": EVO_KEY,
@@ -218,22 +223,26 @@ if df_actual is not None and hasattr(df_actual, 'empty') and not df_actual.empty
             col_telefono = df_actual.columns[1]
 
         fila = df_actual[df_actual[col_nombre].astype(str) == cliente_sel].iloc[0]
-        telefono_cliente = fila.get(col_telefono, '') if col_telefono else ''
+        telefono_cliente = str(fila.get(col_telefono, '')) if col_telefono else ''
+        
+        # Limpieza visual en el CRM
+        if telefono_cliente.lower() == 'nan' or not telefono_cliente.strip():
+            telefono_cliente = ""
 
-        st.info(f"📞 **Teléfono:** {telefono_cliente}")
+        st.info(f"📞 **Teléfono:** {telefono_cliente if telefono_cliente else 'No registrado'}")
 
         mensaje_defecto = f"Hola {cliente_sel}, te escribimos desde el CRM para brindarte novedades sobre tu consulta. ¡Quedamos a tu disposición!"
         mensaje_personalizado = st.text_area("Mensaje a enviar:", value=mensaje_defecto, height=120)
 
         if st.button("🚀 Enviar WhatsApp al Cliente", type="primary"):
-            if telefono_cliente and mensaje_personalizado:
+            if telefono_cliente:
                 exito, resp = enviar_whatsapp(telefono_cliente, mensaje_personalizado)
                 if exito:
                     st.success(f"✅ ¡Mensaje enviado a {cliente_sel}!")
                 else:
                     st.error(f"⚠️ {resp}")
             else:
-                st.warning("Verifica que el cliente tenga un número asignado.")
+                st.warning("No se puede enviar: Este cliente no tiene un número registrado.")
 else:
     st.info("💡 Carga o selecciona una lista de clientes en el CRM para habilitar el envío rápido.")
 
